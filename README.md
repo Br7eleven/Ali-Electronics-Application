@@ -29,6 +29,8 @@ Created Ali Electronics Billing software using React Framework + JS + TypeScript
 ## Screenshot
 
 ![Ali Electronics Application Screenshot](https://github.com/Br7eleven/Ali-Electronics-Application/blob/main/Screenshot%202025-04-08%20154858.png)
+GOOD LUCK :)
+![Screenshot](https://github.com/Br7eleven/Ali-Electronics-Application/raw/main/Screenshot%202025-04-08%20154959.png)
 The application will be available at http://localhost:5173
 
 ## Features
