@@ -21,6 +21,7 @@ npm install
 ```bash
 npm run dev
 ```
+![Screenshot](https://github.com/Br7eleven/Ali-Electronics-Application/raw/main/Screenshot%202025-04-08%20154749.png)
 
 The application will be available at http://localhost:5173
 
