@@ -1,0 +1,29 @@
+@media print {
+  /* Hide everything except the invoice */
+  body > *:not(.print-area) {
+    display: none !important;
+  }
+
+  /* Reset background colors and shadows for better printing */
+  .print-area {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide the print button when printing */
+  .print-area button {
+    display: none !important;
+  }
+
+  /* Ensure black text for better printing */
+  .print-area * {
+    color: black !important;
+  }
+
+  /* Add page margins */
+  @page {
+    margin: 2cm;
+  }
+}

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { FileText, Printer } from 'lucide-react';
-import type { Product, Client, BillItem, Bill } from '../types';
+import { FileText } from 'lucide-react';
+import type { Product, Client,  NewBill, NewBillItem } from '../types';
 
 interface BillGeneratorProps {
   products: Product[];
   clients: Client[];
-  onGenerateBill: (bill: Omit<Bill, 'id'>) => void;
+  onGenerateBill: (bill: NewBill) => void;
 }
 
 export function BillGenerator({ products, clients, onGenerateBill }: BillGeneratorProps) {
   const [selectedClient, setSelectedClient] = useState('');
-  const [items, setItems] = useState<BillItem[]>([]);
+  const [items, setItems] = useState<NewBillItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState('1');
 
@@ -20,9 +20,9 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
       setItems([
         ...items,
         {
-          productId: product.id,
+          product_id: product.id,
           quantity: Number(quantity),
-          price: product.price
+          price_at_time: product.price
         }
       ]);
       setSelectedProduct('');
@@ -35,27 +35,31 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
   };
 
   const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return items.reduce((sum, item) => sum + item.price_at_time * item.quantity, 0);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedClient && items.length > 0) {
-      onGenerateBill({
-        clientId: selectedClient,
-        date: new Date().toISOString(),
-        items,
-        total: calculateTotal()
-      });
-      setSelectedClient('');
-      setItems([]);
-    }
+    if (!selectedClient) return;
+    if (items.length === 0) return;
+
+    const bill: NewBill = {
+      client_id: selectedClient,
+      total: calculateTotal(),
+      discount: 0,
+      items
+    };
+
+    onGenerateBill(bill);
+
+    setSelectedClient('');
+    setItems([]);
   };
 
   return (
     <div className="space-y-6 bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold text-gray-800">Generate Bill</h2>
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700">Select Client</label>
         <select
@@ -111,13 +115,13 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {items.map((item, index) => {
-                const product = products.find(p => p.id === item.productId);
+                const product = products.find(p => p.id === item.product_id);
                 return (
                   <tr key={index}>
                     <td className="px-6 py-4">{product?.name}</td>
                     <td className="px-6 py-4">{item.quantity}</td>
-                    <td className="px-6 py-4">₹{item.price}</td>
-                    <td className="px-6 py-4">₹{item.price * item.quantity}</td>
+                    <td className="px-6 py-4">₹{item.price_at_time}</td>
+                    <td className="px-6 py-4">₹{item.price_at_time * item.quantity}</td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => removeItem(index)}

@@ -1,261 +1,249 @@
-import React, { useState, useEffect } from 'react';
-import { CircuitBoard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BillForm } from './components/BillForm';
+import { ProductList } from './components/ProductList';
 import { ProductForm } from './components/ProductForm';
 import { ClientForm } from './components/ClientForm';
-import { BillGenerator } from './components/BillGenerator';
-import { BillPreview } from './components/BillPreview';
+import { BillHistory } from './components/BillHistory';
 import type { Product, Client, Bill } from './types';
-import pool from './lib/db';
+import { supabase } from './lib/supabase';
+import { db } from './lib/db';
+import { Toaster } from 'react-hot-toast';
 
-function App() {
+export default function App() {
+
   const [products, setProducts] = useState<Product[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
-  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
-  const [activeTab, setActiveTab] = useState<'products' | 'clients' | 'billing'>('products');
-  const [dbError, setDbError] = useState<string | null>(null);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'clients' | 'billing' | 'history'>('products');
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [billSearchTerm, setBillSearchTerm] = useState('');
 
   useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        // Test database connection
-        await pool.query('SELECT 1');
-        setDbError(null);
-      } catch (error) {
-        console.error('Database connection error:', error);
-        setDbError('Unable to connect to database. Please check your database configuration.');
-      }
-    };
-
-    loadInitialData();
+    loadProducts();
+    loadClients();
+    loadBills();
   }, []);
 
-  const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
+  const loadProducts = async () => {
     try {
-      const [result] = await pool.execute(
-        'INSERT INTO products (id, name, price, stock) VALUES (UUID(), ?, ?, ?)',
-        [productData.name, productData.price, productData.stock]
-      );
-      const [rows] = await pool.execute('SELECT * FROM products WHERE id = LAST_INSERT_ID()');
-      const newProduct = rows[0];
-      setProducts([...products, newProduct]);
+      const { data, error } = await supabase.from('products').select('*');
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    }
+  };
+
+  const loadClients = async () => {
+    try {
+      const clients = await db.getClients();
+      setClients(clients);
+    } catch (error) {
+      console.error('Error loading clients:', error);
+    }
+  };
+
+  const loadBills = async () => {
+    try {
+      const bills = await db.getBills();
+      setBills(bills);
+    } catch (error) {
+      console.error('Error loading bills:', error);
+    }
+  };
+
+  const handleProductAdded = async (productData: Omit<Product, 'id' | 'created_at'>) => {
+    try {
+      const newProduct = await db.addProduct(productData);
+      if (newProduct) {
+        setProducts(prev => [...prev, newProduct]);
+      }
+      setShowProductForm(false);
     } catch (error) {
       console.error('Error adding product:', error);
     }
   };
 
-  const handleUpdateProduct = async (id: string, productData: Omit<Product, 'id'>) => {
+  const handleClientAdded = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
     try {
-      await pool.execute(
-        'UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?',
-        [productData.name, productData.price, productData.stock, id]
-      );
-      setProducts(products.map(p => p.id === id ? { ...productData, id } : p));
-    } catch (error) {
-      console.error('Error updating product:', error);
-    }
-  };
-
-  const handleDeleteProduct = async (id: string) => {
-    try {
-      await pool.execute('DELETE FROM products WHERE id = ?', [id]);
-      setProducts(products.filter(p => p.id !== id));
-    } catch (error) {
-      console.error('Error deleting product:', error);
-    }
-  };
-
-  const handleAddClient = async (clientData: Omit<Client, 'id'>) => {
-    try {
-      const [result] = await pool.execute(
-        'INSERT INTO clients (id, name, phone, address) VALUES (UUID(), ?, ?, ?)',
-        [clientData.name, clientData.phone, clientData.address]
-      );
-      const [rows] = await pool.execute('SELECT * FROM clients WHERE id = LAST_INSERT_ID()');
-      const newClient = rows[0];
-      setClients([...clients, newClient]);
+      const newClient = await db.addClient(clientData);
+      if (newClient) {
+        setClients(prev => [...prev, newClient]);
+      }
     } catch (error) {
       console.error('Error adding client:', error);
     }
   };
 
-  const handleUpdateClient = async (id: string, clientData: Omit<Client, 'id'>) => {
-    try {
-      await pool.execute(
-        'UPDATE clients SET name = ?, phone = ?, address = ? WHERE id = ?',
-        [clientData.name, clientData.phone, clientData.address, id]
-      );
-      setClients(clients.map(c => c.id === id ? { ...clientData, id } : c));
-    } catch (error) {
-      console.error('Error updating client:', error);
-    }
+  const handleBillGenerated = (bill: Bill) => {
+    setBills(prev => [bill, ...prev]);
+    loadProducts(); // Refresh products to update stock
   };
-
-  const handleDeleteClient = async (id: string) => {
-    try {
-      await pool.execute('DELETE FROM clients WHERE id = ?', [id]);
-      setClients(clients.filter(c => c.id !== id));
-    } catch (error) {
-      console.error('Error deleting client:', error);
-    }
-  };
-
-  const handleGenerateBill = async (billData: Omit<Bill, 'id'>) => {
-    try {
-      const connection = await pool.getConnection();
-      await connection.beginTransaction();
-
-      try {
-        const [billResult] = await connection.execute(
-          'INSERT INTO bills (id, client_id, date, total) VALUES (UUID(), ?, NOW(), ?)',
-          [billData.clientId, billData.total]
-        );
-        const [billRows] = await connection.execute('SELECT * FROM bills WHERE id = LAST_INSERT_ID()');
-        const newBill = billRows[0];
-
-        for (const item of billData.items) {
-          await connection.execute(
-            'INSERT INTO bill_items (id, bill_id, product_id, quantity, price) VALUES (UUID(), ?, ?, ?, ?)',
-            [newBill.id, item.productId, item.quantity, item.price]
-          );
-
-          await connection.execute(
-            'UPDATE products SET stock = stock - ? WHERE id = ?',
-            [item.quantity, item.productId]
-          );
-        }
-
-        await connection.commit();
-        setBills([...bills, newBill]);
-        setSelectedBill(newBill);
-
-        const [updatedProducts] = await pool.execute('SELECT * FROM products');
-        setProducts(updatedProducts);
-      } catch (error) {
-        await connection.rollback();
-        throw error;
-      } finally {
-        connection.release();
-      }
-    } catch (error) {
-      console.error('Error generating bill:', error);
-    }
-  };
-
-  if (dbError) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <div className="flex items-center justify-center mb-4">
-            <CircuitBoard className="h-12 w-12 text-red-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-center text-gray-900 mb-4">Database Connection Error</h1>
-          <p className="text-gray-600 text-center mb-6">{dbError}</p>
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  Please make sure:
-                  <ul className="list-disc ml-5 mt-2">
-                    <li>MySQL is installed and running</li>
-                    <li>Database credentials in .env are correct</li>
-                    <li>The database 'ali_electronics' exists</li>
-                    <li>Required tables are created</li>
-                  </ul>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
+      
+      {/* Header */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CircuitBoard className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-3xl font-bold text-gray-900">Ali Electronics</h1>
-            </div>
-            <nav className="flex space-x-4">
-              <button
-                onClick={() => setActiveTab('products')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activeTab === 'products'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Products
-              </button>
-              <button
-                onClick={() => setActiveTab('clients')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activeTab === 'clients'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Clients
-              </button>
-              <button
-                onClick={() => setActiveTab('billing')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activeTab === 'billing'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Billing
-              </button>
-            </nav>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Ali Electronics</h1>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 gap-6">
-          {activeTab === 'products' && (
-            <ProductForm
-              onAddProduct={handleAddProduct}
-              onUpdateProduct={handleUpdateProduct}
-              onDeleteProduct={handleDeleteProduct}
-              products={products}
-            />
-          )}
+      {/* Navigation */}
+      <nav className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
+                activeTab === 'products'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Products
+            </button>
+            <button
+              onClick={() => setActiveTab('clients')}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
+                activeTab === 'clients'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Clients
+            </button>
+            <button
+              onClick={() => setActiveTab('billing')}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
+                activeTab === 'billing'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Billing
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
+                activeTab === 'history'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Bill History
+            </button>
+          </div>
+        </div>
+      </nav>
 
-          {activeTab === 'clients' && (
-            <ClientForm
-              onAddClient={handleAddClient}
-              onUpdateClient={handleUpdateClient}
-              onDeleteClient={handleDeleteClient}
-              clients={clients}
-            />
-          )}
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6">
+            {activeTab === 'products' && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Products</h2>
+                  <button
+                    onClick={() => setShowProductForm(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Add Product
+                  </button>
+                </div>
+                {showProductForm ? (
+                  <ProductForm onSubmit={handleProductAdded} onCancel={() => setShowProductForm(false)} />
+                ) : (
+                  <ProductList products={products} onProductUpdate={loadProducts} />
+                )}
+              </>
+            )}
 
-          {activeTab === 'billing' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <BillGenerator
-                products={products}
-                clients={clients}
-                onGenerateBill={handleGenerateBill}
-              />
-              {selectedBill && (
-                <BillPreview
-                  bill={selectedBill}
-                  client={clients.find(c => c.id === selectedBill.clientId)!}
+            {activeTab === 'clients' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-gray-900">Clients</h2>
+                  <input
+                    type="text"
+                    placeholder="Search clients..."
+                    value={clientSearchTerm}
+                    onChange={(e) => setClientSearchTerm(e.target.value)}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-64 sm:text-sm border-gray-300 rounded-md"
+                  />
+                </div>
+                <ClientForm onSubmit={handleClientAdded} />
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Client List</h3>
+                  </div>
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {clients.filter(client =>
+                        client.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                        client.phone.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                        client.address.toLowerCase().includes(clientSearchTerm.toLowerCase())
+                      ).map((client) => (
+                        <tr key={client.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{client.phone}</td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{client.address}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {clients.filter(client =>
+                    client.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                    client.phone.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                    client.address.toLowerCase().includes(clientSearchTerm.toLowerCase())
+                  ).length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      No clients found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'billing' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-900">Create New Bill</h2>
+                <BillForm
                   products={products}
+                  clients={clients}
+                  onBillGenerated={handleBillGenerated}
                 />
-              )}
-            </div>
-          )}
+              </div>
+            )}
+
+            {activeTab === 'history' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-gray-900">Bill History</h2>
+                  <input
+                    type="text"
+                    placeholder="Search bills..."
+                    value={billSearchTerm}
+                    onChange={(e) => setBillSearchTerm(e.target.value)}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-64 sm:text-sm border-gray-300 rounded-md"
+                  />
+                </div>
+                <BillHistory bills={bills} searchTerm={billSearchTerm} />
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
   );
 }
-
-export default App;
