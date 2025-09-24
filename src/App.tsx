@@ -4,7 +4,7 @@ import { ProductList } from "./components/ProductList";
 import { ProductForm } from "./components/ProductForm";
 import { ClientForm } from "./components/ClientForm";
 import { BillHistory } from "./components/BillHistory";
-import { Login } from "./components/login";
+import { Login } from "./components/Login";
 import type { Product, Client, Bill } from "./types";
 import { supabase } from "./lib/supabase";
 import { db } from "./lib/db";
