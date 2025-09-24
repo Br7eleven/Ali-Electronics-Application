@@ -29,7 +29,11 @@ export const db = {
     if (error) throw error;
     return data;
   },
-
+  //new function for delete product
+async deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) throw error;
+},
   // Clients
   async getClients(): Promise<Client[]> {
     const { data, error } = await supabase.from('clients').select('*');

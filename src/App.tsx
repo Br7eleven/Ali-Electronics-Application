@@ -1,37 +1,87 @@
-import { useState, useEffect } from 'react';
-import { BillForm } from './components/BillForm';
-import { ProductList } from './components/ProductList';
-import { ProductForm } from './components/ProductForm';
-import { ClientForm } from './components/ClientForm';
-import { BillHistory } from './components/BillHistory';
-import type { Product, Client, Bill } from './types';
-import { supabase } from './lib/supabase';
-import { db } from './lib/db';
-import { Toaster } from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { BillForm } from "./components/BillForm";
+import { ProductList } from "./components/ProductList";
+import { ProductForm } from "./components/ProductForm";
+import { ClientForm } from "./components/ClientForm";
+import { BillHistory } from "./components/BillHistory";
+import { Login } from "./components/login";
+import type { Product, Client, Bill } from "./types";
+import { supabase } from "./lib/supabase";
+import { db } from "./lib/db";
+import { Toaster } from "react-hot-toast";
+
+const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours in ms
 
 export default function App() {
-
   const [products, setProducts] = useState<Product[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'clients' | 'billing' | 'history'>('products');
-  const [clientSearchTerm, setClientSearchTerm] = useState('');
-  const [billSearchTerm, setBillSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<"products" | "clients" | "billing" | "history">("products");
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [billSearchTerm, setBillSearchTerm] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [lastActivity, setLastActivity] = useState(Date.now());
 
   useEffect(() => {
-    loadProducts();
-    loadClients();
-    loadBills();
+    const storedLoggedIn = localStorage.getItem("loggedIn");
+    const storedLastActivity = localStorage.getItem("lastActivity");
+
+    if (storedLoggedIn === "true") {
+      setLoggedIn(true);
+      setLastActivity(storedLastActivity ? parseInt(storedLastActivity) : Date.now());
+    }
   }, []);
+
+  useEffect(() => {
+    if (loggedIn) {
+      loadProducts();
+      loadClients();
+      loadBills();
+    }
+  }, [loggedIn]);
+
+  useEffect(() => {
+    const checkInactivity = () => {
+      if (Date.now() - lastActivity > INACTIVITY_LIMIT) {
+        handleLogout();
+      }
+    };
+
+    const interval = setInterval(checkInactivity, 60 * 1000); // check every minute
+    return () => clearInterval(interval);
+  }, [lastActivity]);
+
+  const refreshActivity = () => {
+  const now = Date.now();
+  setLastActivity(now);
+  localStorage.setItem("lastActivity", now.toString()); // save last activity
+};
+
+  const handleLogin = async (username: string, password: string) => {
+  if (username === "admin" && password === "72926") {
+    setLoggedIn(true);
+    localStorage.setItem("loggedIn", "true"); // persist login
+    localStorage.setItem("lastActivity", Date.now().toString()); // store last activity
+    refreshActivity();
+  } else {
+    alert("Invalid credentials");
+  }
+};
+
+ const handleLogout = () => {
+  setLoggedIn(false);
+  localStorage.removeItem("loggedIn");
+  localStorage.removeItem("lastActivity");
+};
 
   const loadProducts = async () => {
     try {
-      const { data, error } = await supabase.from('products').select('*');
+      const { data, error } = await supabase.from("products").select("*");
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error("Error loading products:", error);
     }
   };
 
@@ -40,7 +90,7 @@ export default function App() {
       const clients = await db.getClients();
       setClients(clients);
     } catch (error) {
-      console.error('Error loading clients:', error);
+      console.error("Error loading clients:", error);
     }
   };
 
@@ -49,47 +99,48 @@ export default function App() {
       const bills = await db.getBills();
       setBills(bills);
     } catch (error) {
-      console.error('Error loading bills:', error);
+      console.error("Error loading bills:", error);
     }
   };
 
-  const handleProductAdded = async (productData: Omit<Product, 'id' | 'created_at'>) => {
+  const handleProductAdded = async (productData: Omit<Product, "id" | "created_at">) => {
     try {
       const newProduct = await db.addProduct(productData);
-      if (newProduct) {
-        setProducts(prev => [...prev, newProduct]);
-      }
+      if (newProduct) setProducts((prev) => [...prev, newProduct]);
       setShowProductForm(false);
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error("Error adding product:", error);
     }
   };
 
-  const handleClientAdded = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
+  const handleClientAdded = async (clientData: Omit<Client, "id" | "created_at">) => {
     try {
       const newClient = await db.addClient(clientData);
-      if (newClient) {
-        setClients(prev => [...prev, newClient]);
-      }
+      if (newClient) setClients((prev) => [...prev, newClient]);
     } catch (error) {
-      console.error('Error adding client:', error);
+      console.error("Error adding client:", error);
     }
   };
 
   const handleBillGenerated = (bill: Bill) => {
-    setBills(prev => [bill, ...prev]);
-    loadProducts(); // Refresh products to update stock
+    setBills((prev) => [bill, ...prev]);
+    loadProducts();
   };
 
+  if (!loggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" onClick={refreshActivity} onKeyDown={refreshActivity} onMouseMove={refreshActivity}>
       <Toaster position="top-right" />
-      
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Ali Electronics</h1>
-        </div>
+
+      {/* Logout button */}
+      <header className="bg-white shadow flex justify-between items-center px-4 py-4">
+        <img src="/logo.png" alt="Logo" className="w-40 flex mx-4" />
+        <button onClick={handleLogout} className="bg-red-500 text-white mx-4 px-3 py-1 rounded hover:bg-red-600">
+          Logout
+        </button>
       </header>
 
       {/* Navigation */}
@@ -97,42 +148,26 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             <button
-              onClick={() => setActiveTab('products')}
-              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
-                activeTab === 'products'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={() => setActiveTab("products")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${activeTab === "products" ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
             >
               Products
             </button>
             <button
-              onClick={() => setActiveTab('clients')}
-              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
-                activeTab === 'clients'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={() => setActiveTab("clients")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${activeTab === "clients" ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
             >
               Customer
             </button>
             <button
-              onClick={() => setActiveTab('billing')}
-              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
-                activeTab === 'billing'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={() => setActiveTab("billing")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${activeTab === "billing" ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
             >
               Billing
             </button>
             <button
-              onClick={() => setActiveTab('history')}
-              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${
-                activeTab === 'history'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={() => setActiveTab("history")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 -mb-px ${activeTab === "history" ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
             >
               Bill History
             </button>
@@ -227,7 +262,7 @@ export default function App() {
             )}
 
             {activeTab === 'history' && (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold text-gray-900">Bill History</h2>
                   <input
@@ -244,6 +279,9 @@ export default function App() {
           </div>
         </div>
       </main>
+      <footer className="text-center text-sm text-zinc-500 py-4 ">
+      BR7 Technologies & Co.
+    </footer>
     </div>
   );
 }
