@@ -112,23 +112,29 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
                   </svg>
                 </button>
               </div>
-              <div className="p-6">
-                <Invoice bill={selectedBill} />
-                <div className="mt-4 flex justify-end space-x-4">
-                  <button
-                    onClick={() => window.print()}
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Print Invoice
-                  </button>
-                  <button
-                    onClick={handleCloseModal}
-                    className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
+              <div 
+  className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+  onClick={handleOverlayClick}
+>
+  <div className="bg-white rounded shadow p-2 max-w-[340px] w-full" onClick={e => e.stopPropagation()}>
+    <Invoice bill={selectedBill} />
+    <div className="mt-2 flex justify-end space-x-2">
+      <button
+        onClick={() => window.print()}
+        className="py-1 px-3 text-sm font-medium rounded bg-indigo-600 text-white hover:bg-indigo-700"
+      >
+        Print Invoice
+      </button>
+      <button
+        onClick={handleCloseModal}
+        className="py-1 px-3 text-sm font-medium rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
             </div>
           </div>
         </div>

@@ -121,25 +121,28 @@ export function BillForm({ products, clients, onBillGenerated }: BillFormProps) 
 
   if (generatedBill) {
     return (
-      <div className="space-y-4 p-4">
-        <div className="bg-white rounded-lg shadow-lg print-area">
-          <Invoice bill={generatedBill} />
-        </div>
-        <div className="flex justify-between">
-          <button
-            onClick={() => window.print()}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Print Invoice
-          </button>
-          <button
-            onClick={() => setGeneratedBill(null)}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            Create New Bill
-          </button>
-        </div>
-      </div>
+      <div className="space-y-4 p-4 flex flex-col items-center">
+  {generatedBill && (
+    <div className="shadow-sm">
+      <Invoice bill={generatedBill} />
+    </div>
+  )}
+  <div className="flex justify-between w-full max-w-[320px]">
+    <button
+      onClick={() => window.print()}
+      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+    >
+      Print Invoice
+    </button>
+    <button
+      onClick={() => setGeneratedBill(null)}
+      className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+    >
+      Create New Bill
+    </button>
+  </div>
+</div>
+
     );
   }
 
@@ -147,7 +150,7 @@ export function BillForm({ products, clients, onBillGenerated }: BillFormProps) 
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Client Selection */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className=" text-sm font-medium text-gray-700">
           Select Client
         </label>
         <select

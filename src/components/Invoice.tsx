@@ -2,7 +2,6 @@ import type { Bill } from '../types';
 
 interface InvoiceProps {
   bill: Bill;
-  
 }
 
 export function Invoice({ bill }: InvoiceProps) {
@@ -11,93 +10,82 @@ export function Invoice({ bill }: InvoiceProps) {
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     });
 
-  const total = bill.total; // fixed from total_amount
+  const total = bill.total;
   const discount = bill.discount;
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md print-area">
+    <div className="bg-white p-4 rounded shadow print-area w-[320px]">
       {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Ali Electronics</h1>
-        <p className="text-gray-600">Address: Asghar market near Shah City Mall punyal road Gilgit.</p>
-        <p className="text-gray-600">Phone: 0310-909340-9 / 0355-450462-2</p>
+      <div className="text-center mb-4">
+        <h1 className="text-xl font-bold">Ali Electronics</h1>
+        <p className="text-sm">Asghar market near Shah City Mall, Punyal road, Gilgit</p>
+        <p className="text-sm">0310-909340-9 / 0355-450462-2</p>
       </div>
 
-      {/* Invoice Info */}
-      <div className="flex justify-between mb-8">
-        <div className="text-md font-sm mb-2">
-            <h2 className="text-zinc-700">
-              <span className="font-semibold">Bill To:</span> <span className="font-normal">{bill.client?.name}</span>
-            </h2>
-          </div>
-        <div className="text-right">
-          <p className="text-gray-700">
-            <span className="font-semibold">Invoice #:</span> {bill.id.slice(0, 8)}
-          </p>
-          <p className="text-gray-700">
-            <span className="font-semibold">Date:</span> {formatDate(bill.created_at)}
-          </p>
-        </div>
+      {/* Bill Info */}
+      <div className="mb-4">
+        <p className="text-sm font-semibold">Bill To: <span className="font-normal">{bill.client?.name || "Unknown"}</span></p>
+        <p className="text-sm"><span className="font-semibold">Invoice #:</span> {bill.id.slice(0, 8)}</p>
+        <p className="text-sm"><span className="font-semibold">Date:</span> {formatDate(bill.created_at)}</p>
       </div>
 
       {/* Items Table */}
-      <table className="w-full mb-8">
+      <table className="w-full text-sm border-collapse mb-4">
         <thead>
-          <tr className="border-b-2 border-gray-200">
-            <th className="text-left py-2">Item</th>
-            <th className="text-right py-2">Quantity</th>
-            <th className="text-right py-2">Price</th>
-            <th className="text-right py-2">Total</th>
+          <tr className="border-b border-gray-300">
+            <th className="text-left py-1">Item</th>
+            <th className="text-center py-1">Qty</th>
+            <th className="text-right py-1">Price</th>
+            <th className="text-right py-1">Total</th>
           </tr>
         </thead>
         <tbody>
-          {bill.items?.map((item, index) => (
-            <tr key={index} className="border-b border-gray-100">
-              <td className="py-2">{item.product_name}</td>
-              <td className="text-right py-2">{item.quantity}</td>
-              <td className="text-right py-2">{formatPrice(item.price_at_time)}</td>
-              <td className="text-right py-2">{formatPrice(item.price_at_time * item.quantity)}</td>
+          {bill.items?.map((item, i) => (
+            <tr key={i} className="border-b border-gray-200">
+              <td className="py-1">{item.product_name}</td>
+              <td className="text-center py-1">{item.quantity}</td>
+              <td className="text-right py-1">{formatPrice(item.price_at_time)}</td>
+              <td className="text-right py-1">{formatPrice(item.price_at_time * item.quantity)}</td>
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t-2 border-gray-200">
-          <tr>
-            <td colSpan={3} className="py-2 text-right text-gray-600">
-              Subtotal:
-            </td>
-            <td className="py-2 text-right text-gray-600">{formatPrice(total)}</td>
-          </tr>
-          <tr>
-            <td colSpan={3} className="py-2 text-right text-gray-600">
-              Discount:
-            </td>
-            <td className="py-2 text-right text-gray-600">{formatPrice(discount)}</td>
-          </tr>
-          <tr>
-            <td colSpan={3} className="py-2 text-right font-bold">Total:</td>
-            <td className="py-2 text-right font-bold">{formatPrice(total - discount)}</td>
-          </tr>
-        </tfoot>
       </table>
 
-      {/* Footer */}
-      <div className="text-center text-gray-600 text-sm mt-8">
-        <p>Thank you for Shopping!</p>
-        <p>For any queries, please contact us at: 0346-540706-8</p>
-        <p>Developed By Balaj Hussain</p>
+      {/* Summary */}
+      <div className="text-sm">
+        <div className="flex justify-between">
+          <span>Subtotal:</span>
+          <span>{formatPrice(total)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Discount:</span>
+          <span>{formatPrice(discount)}</span>
+        </div>
+        <div className="flex justify-between font-bold border-t border-gray-300 pt-1">
+          <span>Total:</span>
+          <span>{formatPrice(total - discount)}</span>
+        </div>
       </div>
 
+      {/* Footer */}
+      <div className="text-center text-xs mt-4">
+        <p>Thank you for shopping!</p>
+        <p>Contact: 0346-540706-8</p>
+        <p>Developed by Balaj Hussain</p>
+      </div>
+
+      {/* Print Styles */}
       <style>
         {`
           @media print {
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
-            .print-area { position: relative; left: 0; top: 0; width: 100%; }
-            @page { margin: auto; }
+            .print-area { position: relative; left: 0; top: 0; width: 320px; }
+            @page { size: auto; margin: 10mm; }
           }
         `}
       </style>
