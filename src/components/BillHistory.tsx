@@ -11,9 +11,10 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 
   const filteredBills = bills.filter(bill => 
-    bill.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bill.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  bill.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  bill.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

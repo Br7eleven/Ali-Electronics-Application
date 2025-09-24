@@ -208,7 +208,7 @@ export default function App() {
                     client.address.toLowerCase().includes(clientSearchTerm.toLowerCase())
                   ).length === 0 && (
                     <div className="text-center py-4 text-gray-500">
-                      No clients found
+                      No Customer found
                     </div>
                   )}
                 </div>
