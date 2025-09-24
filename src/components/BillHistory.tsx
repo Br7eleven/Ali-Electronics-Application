@@ -50,7 +50,7 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
                 Bill ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
+                Customer
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
@@ -70,7 +70,7 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
                   {bill.id.slice(0, 8)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {bill.client_name}
+                  {bill.client?.name || 'Unknown Client'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatDate(bill.created_at)}

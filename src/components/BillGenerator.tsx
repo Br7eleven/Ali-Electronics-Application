@@ -61,13 +61,13 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
       <h2 className="text-xl font-semibold text-gray-800">Generate Bill</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Select Client</label>
+        <label className="block text-sm font-medium text-gray-700">Select Customer</label>
         <select
           value={selectedClient}
           onChange={(e) => setSelectedClient(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="">Select a client</option>
+          <option value="">Select a customer</option>
           {clients.map(client => (
             <option key={client.id} value={client.id}>{client.name}</option>
           ))}

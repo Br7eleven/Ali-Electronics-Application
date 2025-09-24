@@ -2,6 +2,7 @@ import type { Bill } from '../types';
 
 interface InvoiceProps {
   bill: Bill;
+  
 }
 
 export function Invoice({ bill }: InvoiceProps) {
@@ -20,7 +21,7 @@ export function Invoice({ bill }: InvoiceProps) {
   return (
     <div className="bg-white p-8 rounded-lg shadow-md print-area">
       {/* Header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Ali Electronics</h1>
         <p className="text-gray-600">Address: Asghar market near Shah City Mall punyal road Gilgit.</p>
         <p className="text-gray-600">Phone: 0310-909340-9 / 0355-450462-2</p>
@@ -28,10 +29,11 @@ export function Invoice({ bill }: InvoiceProps) {
 
       {/* Invoice Info */}
       <div className="flex justify-between mb-8">
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Bill To:</h2>
-          <p className="text-gray-700">{bill.client_name}</p>
-        </div>
+        <div className="text-md font-sm mb-2">
+            <h2 className="text-zinc-700">
+              <span className="font-semibold">Bill To:</span> <span className="font-normal">{bill.client?.name}</span>
+            </h2>
+          </div>
         <div className="text-right">
           <p className="text-gray-700">
             <span className="font-semibold">Invoice #:</span> {bill.id.slice(0, 8)}

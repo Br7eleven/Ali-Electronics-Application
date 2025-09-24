@@ -12,6 +12,7 @@ export interface Client {
   phone: string;
   address: string;
   created_at: string;
+  
 }
 
 export interface BillItem {
@@ -31,6 +32,7 @@ export interface Bill {
   discount: number;
   created_at: string;
   items?: BillItem[];
+  client?: Client;
 }
 // For creating BillItems (no id, no bill_id at the start)
 export type NewBillItem = Omit<BillItem, "id" | "bill_id">;

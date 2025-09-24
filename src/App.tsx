@@ -114,7 +114,7 @@ export default function App() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Clients
+              Customer
             </button>
             <button
               onClick={() => setActiveTab('billing')}
@@ -166,19 +166,19 @@ export default function App() {
             {activeTab === 'clients' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900">Clients</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Customers</h2>
                   <input
                     type="text"
-                    placeholder="Search clients..."
+                    placeholder="Search Customers..."
                     value={clientSearchTerm}
                     onChange={(e) => setClientSearchTerm(e.target.value)}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-64 sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm bg-zinc-50 border-2 border-blue-700 focus:border-green-700  block w-64 rounded-md "
                   />
                 </div>
                 <ClientForm onSubmit={handleClientAdded} />
                 <div className="mt-8">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Client List</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Customer List</h3>
                   </div>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
