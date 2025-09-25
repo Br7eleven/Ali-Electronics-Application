@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 import type { Product, Client, Bill, NewBill } from '../types';
+// import { v4 as uuidv4 } from "uuid";
+
 
 export const db = {
   // Products
@@ -199,4 +201,78 @@ async getBill(billId: string): Promise<Bill | null> {
     if (error) throw error;
     return data;
   },
+
+  // User Login
+  // User Login (single device restriction)
+async loginUser(username: string, password: string) {
+  // Check credentials
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .eq('password', password) // plaintext for now
+    .single();
+
+  if (error || !user) {
+    throw new Error('Invalid credentials');
+  }
+
+  // Check active session
+  const now = new Date();
+  if (user.session_token && user.session_expires && new Date(user.session_expires) > now) {
+    throw new Error('Already logged in elsewhere');
+  }
+
+  // Create new session
+  const token = crypto.randomUUID(); // instead of uuidv4()
+  const expiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({
+      session_token: token,
+      session_expires: expiry.toISOString(),
+    })
+    .eq('id', user.id);
+
+  if (updateError) throw updateError;
+
+  return { token, expiry };
+},
+
+  // Validate session
+  async validateSession(token: string) {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('session_token', token)
+      .single();
+
+    if (error || !user) return null;
+
+    const now = new Date();
+    if (!user.session_expires || new Date(user.session_expires) < now) {
+      return null; // expired
+    }
+
+    return user;
+  },
+
+  // Logout
+  async logoutUser(token: string) {
+    const { error } = await supabase
+      .from('users')
+      .update({
+        session_token: null,
+        session_expires: null,
+      })
+      .eq('session_token', token);
+
+    if (error) throw error;
+  },
+  //till here...
 };
+
+
+
+

@@ -1,3 +1,4 @@
+import { Toaster, toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { BillForm } from "./components/BillForm";
 import { ProductList } from "./components/ProductList";
@@ -8,7 +9,7 @@ import { Login } from "./components/Login";
 import type { Product, Client, Bill } from "./types";
 import { supabase } from "./lib/supabase";
 import { db } from "./lib/db";
-import { Toaster } from "react-hot-toast";
+
 
 const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours in ms
 
@@ -24,14 +25,18 @@ export default function App() {
   const [lastActivity, setLastActivity] = useState(Date.now());
 
   useEffect(() => {
-    const storedLoggedIn = localStorage.getItem("loggedIn");
-    const storedLastActivity = localStorage.getItem("lastActivity");
+  const token = localStorage.getItem("sessionToken");
+  if (!token) return;
 
-    if (storedLoggedIn === "true") {
+  db.validateSession(token).then((user) => {
+    if (user) {
       setLoggedIn(true);
-      setLastActivity(storedLastActivity ? parseInt(storedLastActivity) : Date.now());
+      setLastActivity(Date.now());
+    } else {
+      handleLogout();
     }
-  }, []);
+  });
+}, []);
 
   useEffect(() => {
     if (loggedIn) {
@@ -59,21 +64,37 @@ export default function App() {
 };
 
   const handleLogin = async (username: string, password: string) => {
-  if (username === "admin" && password === "72926") {
+  try {
+    const { token, expiry } = await db.loginUser(username, password);
+
+    localStorage.setItem("sessionToken", token);
+    localStorage.setItem("sessionExpiry", expiry.toString());
+
     setLoggedIn(true);
-    localStorage.setItem("loggedIn", "true"); // persist login
-    localStorage.setItem("lastActivity", Date.now().toString()); // store last activity
     refreshActivity();
-  } else {
-    alert("Invalid credentials");
+  } catch (err: any) {
+    // console.error("Login failed:", err);
+
+    if (err.message === "Already logged in elsewhere") {
+      toast.error("Already logged in elsewhere");
+    } else if (err.message === "Invalid credentials") {
+      toast.error("Invalid username or password");
+    } else {
+      toast.error("Login failed");
+    }
   }
 };
 
- const handleLogout = () => {
+const handleLogout = async () => {
+  const token = localStorage.getItem("sessionToken");
+  if (token) {
+    await db.logoutUser(token);
+  }
   setLoggedIn(false);
-  localStorage.removeItem("loggedIn");
-  localStorage.removeItem("lastActivity");
+  localStorage.clear();
 };
+
+
 
   const loadProducts = async () => {
     try {
@@ -138,7 +159,7 @@ export default function App() {
   onKeyDown={refreshActivity}
   onMouseMove={refreshActivity}
 >
-  <Toaster position="top-right" />
+  <Toaster position="top-center" />
 
   {/* Header */}
   <header className="bg-white shadow flex flex-col sm:flex-row justify-between items-center px-2 sm:px-4 py-2 sm:py-4 space-y-2 sm:space-y-0">
@@ -350,7 +371,7 @@ export default function App() {
   <footer className="text-center text-xs sm:text-sm text-zinc-500 py-4">
     BR7 Technologies & Co.
   </footer>
-</div>
+  </div>
 
   );
 }
