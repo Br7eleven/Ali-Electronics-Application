@@ -74,15 +74,24 @@ async deleteProduct(id: string): Promise<void> {
         phone,
         address
       ),
-      bill_items(*)
+      bill_items(
+        id,
+        quantity,
+        price_at_time,
+        product:products(
+          id,
+          name,
+          price
+        )
+      )
     `)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
   return data || [];
 },
-  //added this new function for the inovice view
- async getBill(billId: string): Promise<Bill | null> {
+
+async getBill(billId: string): Promise<Bill | null> {
   const { data, error } = await supabase
     .from('bills')
     .select(`
@@ -93,7 +102,16 @@ async deleteProduct(id: string): Promise<void> {
         phone,
         address
       ),
-      bill_items(*)
+      bill_items(
+        id,
+        quantity,
+        price_at_time,
+        product:products(
+          id,
+          name,
+          price
+        )
+      )
     `)
     .eq('id', billId)
     .single();
@@ -104,6 +122,7 @@ async deleteProduct(id: string): Promise<void> {
   }
   return data;
 },
+
 
   async addBill(bill: NewBill): Promise<Bill> {
   // Insert bill (with discount)
@@ -139,19 +158,28 @@ async deleteProduct(id: string): Promise<void> {
 
   // Fetch the newly created bill with client and items
   const { data: newBill, error: fetchError } = await supabase
-    .from('bills')
-    .select(`
-      *,
-      client:clients(
+  .from('bills')
+  .select(`
+    *,
+    client:clients(
+      id,
+      name,
+      phone,
+      address
+    ),
+    bill_items(
+      id,
+      quantity,
+      price_at_time,
+      product:products(
         id,
         name,
-        phone,
-        address
-      ),
-      bill_items(*)
-    `)
-    .eq('id', billData.id)
-    .single();
+        price
+      )
+    )
+  `)
+  .eq('id', billData.id)
+  .single();
 
   if (fetchError || !newBill) {
     throw fetchError || new Error('Failed to fetch bill after creation');

@@ -86,16 +86,26 @@ export function BillForm({ products, clients, onBillGenerated }: BillFormProps) 
       const total = calculateTotal();
       const discountValue = parseFloat(discount) || 0;
       
+      // Update product stock before creating the bill
+      for (const item of items) {
+        const newStock = item.product.stock - item.quantity;
+        if (newStock < 0) {
+          toast.error(`Not enough stock for ${item.product.name}`);
+          return;
+        }
+        await db.updateProduct(item.product.id, { stock: newStock });
+      }
+      
       const bill = await db.addBill({
-  client_id: selectedClient.id,
-  total,
-  discount: discountValue,
-  items: items.map(item => ({
-    product_id: item.product.id,
-    quantity: item.quantity,
-    price_at_time: item.price_at_time
-  }))
-});
+        client_id: selectedClient.id,
+        total,
+        discount: discountValue,
+        items: items.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          price_at_time: item.price_at_time
+        }))
+      });
 
       setGeneratedBill(bill);
       if (onBillGenerated) {

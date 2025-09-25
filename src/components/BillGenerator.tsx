@@ -30,9 +30,9 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
     }
   };
 
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  // const removeItem = (index: number) => {
+  //   setItems(items.filter((_, i) => i !== index));
+  // };
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.price_at_time * item.quantity, 0);
@@ -103,8 +103,8 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
         </div>
 
         <div className="border rounded-md">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          {/* <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
@@ -134,7 +134,7 @@ export function BillGenerator({ products, clients, onGenerateBill }: BillGenerat
                 );
               })}
             </tbody>
-          </table>
+          </table> */}
         </div>
 
         <div className="flex justify-between items-center pt-4 border-t">

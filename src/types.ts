@@ -22,6 +22,7 @@ export interface BillItem {
   product_name?: string;
   quantity: number;
   price_at_time: number;
+  product?: Product;
 }
 
 export interface Bill {
@@ -33,6 +34,7 @@ export interface Bill {
   created_at: string;
   items?: BillItem[];
   client?: Client;
+  bill_items?: BillItem[];
 }
 // For creating BillItems (no id, no bill_id at the start)
 export type NewBillItem = Omit<BillItem, "id" | "bill_id">;

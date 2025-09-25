@@ -22,7 +22,7 @@ export function Invoice({ bill }: InvoiceProps) {
       {/* Header */}
       <div className="text-center mb-4">
         <h1 className="text-xl font-bold">Ali Electronics</h1>
-        <p className="text-sm">Asghar market near Shah City Mall, Punyal road, Gilgit</p>
+        <p className="text-sm">Asghar market near Shah City Mall, Puniyal road, Gilgit</p>
         <p className="text-sm">0310-909340-9 / 0355-450462-2</p>
       </div>
 
@@ -40,19 +40,19 @@ export function Invoice({ bill }: InvoiceProps) {
             <th className="text-left py-1">Item</th>
             <th className="text-center py-1">Qty</th>
             <th className="text-right py-1">Price</th>
-            <th className="text-right py-1">Total</th>
+            {/* <th className="text-right py-1">Total</th> */}
           </tr>
         </thead>
         <tbody>
-          {bill.items?.map((item, i) => (
-            <tr key={i} className="border-b border-gray-200">
-              <td className="py-1">{item.product_name}</td>
-              <td className="text-center py-1">{item.quantity}</td>
-              <td className="text-right py-1">{formatPrice(item.price_at_time)}</td>
-              <td className="text-right py-1">{formatPrice(item.price_at_time * item.quantity)}</td>
-            </tr>
-          ))}
-        </tbody>
+  {bill.bill_items?.map((item, i) => (
+    <tr key={i} className="border-b border-gray-200">
+      <td className="py-1">{item.product?.name}</td>
+      <td className="text-center py-1">{item.quantity}</td>
+      <td className="text-right py-1">{formatPrice(item.price_at_time)}</td>
+      {/* <td className="text-right py-1">{formatPrice((item.product?.price || 0) * item.quantity)}</td> */}
+    </tr>
+  ))}
+</tbody>
       </table>
 
       {/* Summary */}
@@ -75,7 +75,7 @@ export function Invoice({ bill }: InvoiceProps) {
       <div className="text-center text-xs mt-4">
         <p>Thank you for shopping!</p>
         <p>Contact: 0346-540706-8</p>
-        <p>Developed by Balaj Hussain</p>
+        <p>Developed by BR7 Technologies & Co.</p>
       </div>
 
       {/* Print Styles */}

@@ -116,7 +116,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
                 Stock
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-zinc-50 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -161,7 +161,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
                     <div className="text-sm text-gray-900">{product.stock}</div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-8 flex-wrap text-center py-4 whitespace-nowrap  text-sm font-medium">
                   {editingProduct?.id === product.id ? (
                     <div className="space-x-2">
                       <button
