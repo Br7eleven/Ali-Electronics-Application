@@ -38,6 +38,7 @@ export function BillPreview({ bill }: BillPreviewProps) {
           </p>
         </div>
       </div>
+      
     </div>
   );
 }

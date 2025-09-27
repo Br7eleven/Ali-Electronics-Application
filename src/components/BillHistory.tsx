@@ -46,28 +46,31 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
   <div className="bg-white rounded-lg shadow overflow-hidden">
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+        <thead className="bg-zinc-700">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
               Bill ID
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
               Customer
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
               Date
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Total Amount
+            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
+              Discount($)
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
+              Total Amount($)
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {filteredBills.map((bill) => (
-            <tr key={bill.id} className="hover:bg-gray-50">
+            <tr key={bill.id} className="hover:bg-gray-50 tracking-normal">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {bill.id.slice(0, 8)}
               </td>
@@ -78,12 +81,15 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
                 {formatDate(bill.created_at)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatPrice(bill.total)}
+                {bill.discount }
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {formatPrice(Number(bill.total) - Number(bill.discount || 0))}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 <button
                   onClick={() => setSelectedBill(bill)}
-                  className="text-indigo-600 hover:text-indigo-900"
+                  className="text-zinc-50 hover:bg-blue-400 bg-blue-500 py-1 px-1 rounded-md"
                 >
                   View Invoice
                 </button>

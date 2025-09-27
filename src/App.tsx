@@ -5,6 +5,7 @@ import { ProductList } from "./components/ProductList";
 import { ProductForm } from "./components/ProductForm";
 import { ClientForm } from "./components/ClientForm";
 import { BillHistory } from "./components/BillHistory";
+import { Payments } from "./components/Payments";
 import { Login } from "./components/Login";
 import type { Product, Client, Bill } from "./types";
 import { supabase } from "./lib/supabase";
@@ -18,7 +19,7 @@ export default function App() {
   const [clients, setClients] = useState<Client[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "clients" | "billing" | "history">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "clients" | "billing" | "history" | "payments">("products");
   const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [billSearchTerm, setBillSearchTerm] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
@@ -93,8 +94,6 @@ const handleLogout = async () => {
   setLoggedIn(false);
   localStorage.clear();
 };
-
-
 
   const loadProducts = async () => {
     try {
@@ -216,6 +215,16 @@ const handleLogout = async () => {
         >
           Bill History
         </button>
+        <button
+          onClick={() => setActiveTab("payments")}
+          className={`px-3 py-2 text-sm font-medium border-b-2 sm:-mb-px ${
+            activeTab === "payments"
+              ? "border-indigo-500 text-indigo-600"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+          }`}
+            >
+            Payments / Loan
+          </button>
       </div>
     </div>
   </nav>
@@ -269,17 +278,17 @@ const handleLogout = async () => {
                   Customer List
                 </h3>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-zinc-700">
                     <tr>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
                         Phone
                       </th>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
                         Address
                       </th>
                     </tr>
@@ -299,7 +308,7 @@ const handleLogout = async () => {
                             .includes(clientSearchTerm.toLowerCase())
                       )
                       .map((client) => (
-                        <tr key={client.id}>
+                        <tr key={client.id} className="hover:bg-gray-50 tracking-normal">
                           <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
                             {client.name}
                           </td>
@@ -363,6 +372,10 @@ const handleLogout = async () => {
             </div>
             <BillHistory bills={bills} searchTerm={billSearchTerm} />
           </div>
+        )}
+
+        {activeTab === "payments" && (
+          <Payments />
         )}
       </div>
     </div>

@@ -42,4 +42,32 @@ export type NewBillItem = Omit<BillItem, "id" | "bill_id">;
 // For creating a new Bill (no id, no created_at, items are NewBillItem[])
 export type NewBill = Omit<Bill, "id" | "created_at" | "items"> & {
   items: NewBillItem[];
+}
+export type Payment = {
+  id: string
+  client_id: string
+  bill_id?: string | null
+  total: number
+  paid: number
+  due: number
+  status: 'Unpaid' | 'Partially Paid' | 'Paid'
+  comment?: string | null
+  created_at: string
+  client?: {
+    id: string
+    name: string
+    phone?: string
+  }
+  bill?: {
+    id: string
+    invoice_no?: string
+  }
+}
+
+export type PaymentHistory = {
+  id: string
+  payment_id: string
+  amount: number
+  note?: string | null
+  created_at: string
 };

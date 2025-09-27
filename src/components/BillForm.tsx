@@ -298,6 +298,7 @@ export function BillForm({ products, clients, onBillGenerated }: BillFormProps) 
           >
             Generate Bill
           </button>
+          
         </div>
       </div>
     </form>

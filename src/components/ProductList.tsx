@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import type { Product } from '../types';
 import { db } from '../lib/db';
 import { toast } from 'react-hot-toast';
@@ -22,7 +22,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
     return numPrice.toFixed(2);
   };
 
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.price.toString().includes(searchTerm) ||
     product.stock.toString().includes(searchTerm)
@@ -93,7 +93,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className=" rounded-md border-2 border-blue-700 shadow-md focus:border-blue-500 focus:ring-blue-500 sm:text-sm pl-10"
+            className=" mt-1 block pl-8 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +103,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg shadow-md">
         <table className="min-w-full divide-y divide-gray-200 border border-zinc-700">
           <thead className="bg-zinc-700 ">
             <tr>
@@ -123,14 +123,14 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
           </thead>
           <tbody className="bg-white divide-y divide-zinc-300">
             {filteredProducts.map((product) => (
-              <tr key={product.id}>
+              <tr key={product.id} className="hover:bg-gray-50 tracking-normal">
                 <td className="px-6 py-4 whitespace-nowrap">
                   {editingProduct?.id === product.id ? (
                     <input
                       type="text"
                       value={editForm.name}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="block  rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   ) : (
                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
@@ -143,7 +143,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
                       step="0.01"
                       value={editForm.price}
                       onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="block  rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   ) : (
                     <div className="text-sm text-gray-900">Rs. {formatPrice(product.price)}</div>
@@ -155,7 +155,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
                       type="number"
                       value={editForm.stock}
                       onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="block  rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   ) : (
                     <div className="text-sm text-gray-900">{product.stock}</div>
@@ -166,13 +166,13 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
                     <div className="space-x-2">
                       <button
                         onClick={handleSave}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="px-3 py-1 bg-green-500 text-zinc-50 hover:bg-green-600  rounded-md"
                       >
                         Save
                       </button>
                       <button
                         onClick={handleCancel}
-                        className="text-gray-600 hover:text-gray-900"
+                        className="px-3 py-1 bg-red-600 text-zinc-50 hover:bg-red-700  rounded-md"
                       >
                         Cancel
                       </button>
@@ -180,7 +180,7 @@ export function ProductList({ products, onProductUpdate }: ProductListProps) {
                   ) : (
                     <button
                       onClick={() => handleEdit(product)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="px-3 py-1 bg-blue-500 text-zinc-50 hover:bg-blue-600  rounded-md"
                     >
                       Edit
                     </button>
