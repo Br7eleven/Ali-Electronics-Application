@@ -51,6 +51,7 @@ export function ClientForm({ onSubmit }: ClientFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-4 max-w-md">
+        
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
             Customer Name

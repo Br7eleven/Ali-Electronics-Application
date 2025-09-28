@@ -14,12 +14,23 @@ import { db } from "./lib/db";
 
 const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours in ms
 
+
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "clients" | "billing" | "history" | "payments">("products");
+  type Tab = "products" | "clients" | "billing" | "history" | "payments";
+
+const [activeTab, setActiveTab] = useState<Tab>("products");
+
+const tabs: { tab: Tab; label: string }[] = [
+  { tab: "products", label: "Products" },
+  { tab: "clients", label: "Customers" },
+  { tab: "billing", label: "Billing" },
+  { tab: "history", label: "Bill History" },
+  { tab: "payments", label: "Payments / Loan" },
+];
   const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [billSearchTerm, setBillSearchTerm] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
@@ -153,7 +164,7 @@ const handleLogout = async () => {
 
   return (
     <div
-  className="min-h-screen bg-gray-50"
+  className="min-h-screen bg-zinc-100 flex flex-col"
   onClick={refreshActivity}
   onKeyDown={refreshActivity}
   onMouseMove={refreshActivity}
@@ -161,89 +172,55 @@ const handleLogout = async () => {
   <Toaster position="top-center" />
 
   {/* Header */}
-  <header className="bg-white shadow flex flex-col sm:flex-row justify-between items-center px-2 sm:px-4 py-2 sm:py-4 space-y-2 sm:space-y-0">
-    <img src="/logo.png" alt="Logo" className="w-32 sm:w-40 mx-2 sm:mx-4" />
-    <button
-      onClick={handleLogout}
-      className="bg-red-500 text-white mx-2 sm:mx-4 px-3 py-1 rounded hover:bg-red-600 w-full sm:w-auto"
-    >
-      Logout
-    </button>
+  <header className="bg-white shadow-sm border-b">
+    <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <img src="/logo.png" alt="Logo" className="w-32 sm:w-40" />
+      <button
+        onClick={handleLogout}
+        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+      >
+        Logout
+      </button>
+    </div>
   </header>
 
   {/* Navigation */}
   <nav className="bg-white border-b">
-    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-2 sm:flex sm:space-x-8 gap-2 sm:gap-0">
+  <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+    <div className="flex space-x-2 sm:space-x-6 overflow-x-auto no-scrollbar py-2">
+      {tabs.map(({ tab, label }) => (
         <button
-          onClick={() => setActiveTab("products")}
-          className={`px-3 py-2 text-sm font-medium border-b-2 sm:-mb-px ${
-            activeTab === "products"
-              ? "border-indigo-500 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+          key={tab}
+          onClick={() => setActiveTab(tab)}
+          className={`whitespace-nowrap px-4 py-2 rounded-md text-sm font-medium transition ${
+            activeTab === tab
+              ? "bg-green-100 text-zinc-700 border-b-2 border-green-600"
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
         >
-          Products
+          {label}
         </button>
-        <button
-          onClick={() => setActiveTab("clients")}
-          className={`px-3 py-2 text-sm font-medium border-b-2 sm:-mb-px ${
-            activeTab === "clients"
-              ? "border-indigo-500 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-          }`}
-        >
-          Customer
-        </button>
-        <button
-          onClick={() => setActiveTab("billing")}
-          className={`px-3 py-2 text-sm font-medium border-b-2 sm:-mb-px ${
-            activeTab === "billing"
-              ? "border-indigo-500 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-          }`}
-        >
-          Billing
-        </button>
-        <button
-          onClick={() => setActiveTab("history")}
-          className={`px-3 py-2 text-sm font-medium border-b-2 sm:-mb-px ${
-            activeTab === "history"
-              ? "border-indigo-500 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-          }`}
-        >
-          Bill History
-        </button>
-        <button
-          onClick={() => setActiveTab("payments")}
-          className={`px-3 py-2 text-sm font-medium border-b-2 sm:-mb-px ${
-            activeTab === "payments"
-              ? "border-indigo-500 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-          }`}
-            >
-            Payments / Loan
-          </button>
-      </div>
+      ))}
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   {/* Main Content */}
-  <main className="w-flex-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 sm:py-8">
-    <div className="bg-white rounded-lg shadow">
+  <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+    <div className="bg-white rounded-lg shadow-sm border">
       <div className="p-4 sm:p-6">
         {activeTab === "products" && (
           <>
-            <div className="flex flex-wrap sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Inventory
               </h2>
               <button
                 onClick={() => setShowProductForm(true)}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium shadow-sm transition w-full sm:w-auto"
               >
-                Add Products
+                Add Product
               </button>
             </div>
             {showProductForm ? (
@@ -263,83 +240,63 @@ const handleLogout = async () => {
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Customers
               </h2>
-              <input
-                type="text"
-                placeholder="Search Customers..."
-                value={clientSearchTerm}
-                onChange={(e) => setClientSearchTerm(e.target.value)}
-                className="shadow-sm bg-zinc-50 border-2 border-blue-700 focus:border-green-700 block w-full sm:w-64 rounded-md"
-              />
+              
             </div>
             <ClientForm onSubmit={handleClientAdded} />
-            <div className="mt-6 sm:mt-8">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-base sm:text-lg font-medium text-gray-900">
-                  Customer List
-                </h3>
-              </div>
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-zinc-700">
+            <div className="mt-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">
+                Customer List
+              </h3>
+              <input
+                type="text"
+                placeholder="Search customers..."
+                value={clientSearchTerm}
+                onChange={(e) => setClientSearchTerm(e.target.value)}
+                className="w-full  sm:w-64 rounded-md border border-gray-300 bg-zinc-50 px-3 py-2 my-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              <div className="overflow-x-auto border rounded-md">
+                
+                <table className="min-w-full text-sm text-gray-900">
+                  <thead className="bg-zinc-700 text-zinc-50">
                     <tr>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
-                        Phone
-                      </th>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-zinc-50 uppercase tracking-wider">
-                        Address
-                      </th>
+                      <th className= "px-4 py-2 text-left">ID</th>
+                      <th className="px-4 py-2 text-left">Name</th>
+                      <th className="px-4 py-2 text-left">Phone</th>
+                      <th className="px-4 py-2 text-left">Address</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200">
                     {clients
                       .filter(
-                        (client) =>
-                          client.name
-                            .toLowerCase()
-                            .includes(clientSearchTerm.toLowerCase()) ||
-                          client.phone
-                            .toLowerCase()
-                            .includes(clientSearchTerm.toLowerCase()) ||
-                          client.address
-                            .toLowerCase()
-                            .includes(clientSearchTerm.toLowerCase())
+                        (c) =>
+                          c.id.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                          c.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                          c.phone.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                          c.address.toLowerCase().includes(clientSearchTerm.toLowerCase())
                       )
-                      .map((client) => (
-                        <tr key={client.id} className="hover:bg-gray-50 tracking-normal">
-                          <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                            {client.name}
-                          </td>
-                          <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                            {client.phone}
-                          </td>
-                          <td className="px-3 sm:px-6 py-2 sm:py-4 text-sm text-gray-900">
-                            {client.address}
-                          </td>
+                      .map((c) => (
+                        <tr key={c.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2">{c.id.slice(0, 8)}</td>
+                          <td className="px-4 py-2">{c.name}</td>
+                          <td className="px-4 py-2">{c.phone}</td>
+                          <td className="px-4 py-2">{c.address}</td>
                         </tr>
                       ))}
                   </tbody>
                 </table>
+                
               </div>
               {clients.filter(
-                (client) =>
-                  client.name
-                    .toLowerCase()
-                    .includes(clientSearchTerm.toLowerCase()) ||
-                  client.phone
-                    .toLowerCase()
-                    .includes(clientSearchTerm.toLowerCase()) ||
-                  client.address
-                    .toLowerCase()
-                    .includes(clientSearchTerm.toLowerCase())
+                (c) =>
+                  c.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                  c.phone.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+                  c.address.toLowerCase().includes(clientSearchTerm.toLowerCase())
               ).length === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  No Customer found
+                <div className="text-center py-6 text-gray-500">No customer found
                 </div>
               )}
             </div>
+            
           </div>
         )}
 
@@ -357,7 +314,7 @@ const handleLogout = async () => {
         )}
 
         {activeTab === "history" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Bill History
@@ -367,24 +324,23 @@ const handleLogout = async () => {
                 placeholder="Search bills..."
                 value={billSearchTerm}
                 onChange={(e) => setBillSearchTerm(e.target.value)}
-                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:w-64 sm:text-sm border-gray-300 rounded-md"
+                className="w-full sm:w-64 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               />
             </div>
             <BillHistory bills={bills} searchTerm={billSearchTerm} />
           </div>
         )}
 
-        {activeTab === "payments" && (
-          <Payments />
-        )}
+        {activeTab === "payments" && <Payments />}
       </div>
     </div>
   </main>
 
-  <footer className="text-center text-xs sm:text-sm text-zinc-500 py-4">
+  <footer className="bg-white border-t py-4 text-center text-xs sm:text-sm text-gray-500">
     BR7 Technologies & Co.
   </footer>
-  </div>
+</div>
+
 
   );
 }
