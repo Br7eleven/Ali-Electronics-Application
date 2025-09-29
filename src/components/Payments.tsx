@@ -335,7 +335,7 @@ export function Payments() {
                           </button>
                         </div>
                       ) : (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex  flex-wrap gap-2">
                           <button
                             onClick={() => openEdit(r)}
                             className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs sm:text-sm"
