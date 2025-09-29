@@ -1,5 +1,5 @@
 import { Toaster, toast } from "react-hot-toast";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { BillForm } from "./components/BillForm";
 import { ProductList } from "./components/ProductList";
 import { ProductForm } from "./components/ProductForm";
@@ -11,19 +11,17 @@ import type { Product, Client, Bill } from "./types";
 import { supabase } from "./lib/supabase";
 import { db } from "./lib/db";
 
-const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours
+
+const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours in ms
+
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [clientSearchTerm, setClientSearchTerm] = useState("");
-  const [billSearchTerm, setBillSearchTerm] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [lastActivity, setLastActivity] = useState(Date.now());
-
   type Tab = "products" | "clients" | "billing" | "history" | "payments";
+
   const [activeTab, setActiveTab] = useState<Tab>("products");
 
   const tabs: { tab: Tab; label: string }[] = [
@@ -33,47 +31,11 @@ export default function App() {
     { tab: "history", label: "Bill History" },
     { tab: "payments", label: "Payments / Loan" },
   ];
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [billSearchTerm, setBillSearchTerm] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [lastActivity, setLastActivity] = useState(Date.now());
 
-  // Canvas background ref
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Background animation
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Example background (grid dots)
-      ctx.fillStyle = "rgba(34,197,94,0.2)";
-      for (let x = 0; x < canvas.width; x += 40) {
-        for (let y = 0; y < canvas.height; y += 40) {
-          ctx.beginPath();
-          ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      requestAnimationFrame(draw);
-    };
-    draw();
-
-    return () => {
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-
-  // Session handling
   useEffect(() => {
     const token = localStorage.getItem("sessionToken");
     if (!token) return;
@@ -102,24 +64,29 @@ export default function App() {
         handleLogout();
       }
     };
-    const interval = setInterval(checkInactivity, 60 * 1000);
+
+    const interval = setInterval(checkInactivity, 60 * 1000); // check every minute
     return () => clearInterval(interval);
   }, [lastActivity]);
 
   const refreshActivity = () => {
     const now = Date.now();
     setLastActivity(now);
-    localStorage.setItem("lastActivity", now.toString());
+    localStorage.setItem("lastActivity", now.toString()); // save last activity
   };
 
   const handleLogin = async (username: string, password: string) => {
     try {
       const { token, expiry } = await db.loginUser(username, password);
+
       localStorage.setItem("sessionToken", token);
       localStorage.setItem("sessionExpiry", expiry.toString());
+
       setLoggedIn(true);
       refreshActivity();
     } catch (err: any) {
+      // console.error("Login failed:", err);
+
       if (err.message === "Already logged in elsewhere") {
         toast.error("Already logged in elsewhere");
       } else if (err.message === "Invalid credentials") {
@@ -132,7 +99,9 @@ export default function App() {
 
   const handleLogout = async () => {
     const token = localStorage.getItem("sessionToken");
-    if (token) await db.logoutUser(token);
+    if (token) {
+      await db.logoutUser(token);
+    }
     setLoggedIn(false);
     localStorage.clear();
   };
@@ -165,9 +134,7 @@ export default function App() {
     }
   };
 
-  const handleProductAdded = async (
-    productData: Omit<Product, "id" | "created_at">
-  ) => {
+  const handleProductAdded = async (productData: Omit<Product, "id" | "created_at">) => {
     try {
       const newProduct = await db.addProduct(productData);
       if (newProduct) setProducts((prev) => [...prev, newProduct]);
@@ -177,9 +144,7 @@ export default function App() {
     }
   };
 
-  const handleClientAdded = async (
-    clientData: Omit<Client, "id" | "created_at">
-  ) => {
+  const handleClientAdded = async (clientData: Omit<Client, "id" | "created_at">) => {
     try {
       const newClient = await db.addClient(clientData);
       if (newClient) setClients((prev) => [...prev, newClient]);
@@ -188,10 +153,10 @@ export default function App() {
     }
   };
 
-  const handleBillGenerated = (bill: Bill) => {
-    setBills((prev) => [bill, ...prev]);
-    loadProducts();
-  };
+  // const handleBillGenerated = (bill: Bill) => {
+  //   setBills((prev) => [bill, ...prev]);
+  //   loadProducts();
+  // };
 
   if (!loggedIn) {
     return <Login onLogin={handleLogin} />;
@@ -199,17 +164,11 @@ export default function App() {
 
   return (
     <div
-      className="relative min-h-screen bg-zinc-100 flex flex-col"
+      className="min-h-screen bg-zinc-100 flex flex-col"
       onClick={refreshActivity}
       onKeyDown={refreshActivity}
       onMouseMove={refreshActivity}
     >
-      {/* Background */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 -z-10"
-      ></canvas>
-
       <Toaster position="top-center" />
 
       {/* Header */}
@@ -233,11 +192,10 @@ export default function App() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`whitespace-nowrap px-4 py-2 rounded-md text-sm font-medium transition ${
-                  activeTab === tab
+                className={`whitespace-nowrap px-4 py-2 rounded-md text-sm font-medium transition ${activeTab === tab
                     ? "bg-green-100 text-zinc-700 border-b-2 border-green-600"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {label}
               </button>
@@ -245,6 +203,7 @@ export default function App() {
           </div>
         </div>
       </nav>
+
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
@@ -280,6 +239,7 @@ export default function App() {
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                     Customers
                   </h2>
+
                 </div>
                 <ClientForm onSubmit={handleClientAdded} />
                 <div className="mt-6">
@@ -294,6 +254,7 @@ export default function App() {
                     className="w-full  sm:w-64 rounded-md border border-gray-300 bg-zinc-50 px-3 py-2 my-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                   <div className="overflow-x-auto border rounded-md">
+
                     <table className="min-w-full text-sm text-gray-900">
                       <thead className="bg-zinc-700 text-zinc-50">
                         <tr>
@@ -322,6 +283,7 @@ export default function App() {
                           ))}
                       </tbody>
                     </table>
+
                   </div>
                   {clients.filter(
                     (c) =>
@@ -329,9 +291,11 @@ export default function App() {
                       c.phone.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
                       c.address.toLowerCase().includes(clientSearchTerm.toLowerCase())
                   ).length === 0 && (
-                    <div className="text-center py-6 text-gray-500">No customer found</div>
-                  )}
+                      <div className="text-center py-6 text-gray-500">No customer found
+                      </div>
+                    )}
                 </div>
+
               </div>
             )}
 
@@ -342,8 +306,9 @@ export default function App() {
                 </h2>
                 <BillForm
                   products={products}
-                  clients={clients}
-                  onBillGenerated={handleBillGenerated}
+                  onBillGenerated={(bill) => {
+                    setBills([...bills, bill]);
+                  }}
                 />
               </div>
             )}
@@ -375,5 +340,7 @@ export default function App() {
         BR7 Technologies & Co.
       </footer>
     </div>
+
+
   );
 }

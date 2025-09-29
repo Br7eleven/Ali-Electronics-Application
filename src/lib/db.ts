@@ -63,7 +63,18 @@ export const db = {
     if (error) throw error;
     return data;
   },
+// Clients search
+async searchClients(query: string): Promise<Client[]> {
+  if (!query.trim()) return [];
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id, name, phone")
+    .ilike("name", `%${query}%`) // search by name
+    .limit(10);
 
+  if (error) throw error;
+  return data || [];
+},
   // Bills
   async getBills(): Promise<Bill[]> {
     const { data, error } = await supabase
