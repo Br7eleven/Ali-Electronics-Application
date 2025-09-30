@@ -180,11 +180,11 @@ export function BillHistory({ bills, searchTerm }: BillHistoryProps) {
           onClick={handleOverlayClick}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-lg w-full"
+            className="bg-white rounded-lg shadow-xl max-w-lg "
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Content */}
-            <div className="p-2"> 
+            <div className=""> 
               <Invoice bill={selectedBill} />
             </div>
 
