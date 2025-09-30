@@ -198,7 +198,29 @@ export function BillForm({ products, onBillGenerated }: BillFormProps) {
           </div>
         )}
       </div>
-
+        {/* Discount */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Discount Amount (Rs)</label>
+        <input
+          type="text"
+          pattern="\d*\.?\d{0,2}"
+          value={discount}
+          placeholder="Enter discount"
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+              setDiscount(value);
+            }
+          }}
+          onBlur={() => {
+            if (discount !== '') {
+              const value = parseFloat(discount) || 0;
+              setDiscount(value.toFixed(2));
+            }
+          }}
+          className="mt-1 block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
       {/* Product Search */}
       <div>
         <label className="text-sm font-medium text-gray-700">Select Product</label>

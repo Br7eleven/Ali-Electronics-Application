@@ -75,6 +75,7 @@ async searchClients(query: string): Promise<Client[]> {
   if (error) throw error;
   return data || [];
 },
+
   // Bills
   async getBills(): Promise<Bill[]> {
     const { data, error } = await supabase
