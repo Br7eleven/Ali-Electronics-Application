@@ -7,7 +7,11 @@ import { ClientForm } from "./components/ClientForm";
 import { BillHistory } from "./components/BillHistory";
 import { Payments } from "./components/Payments";
 import { Login } from "./components/Login";
-import type { Product, Client, Bill } from "./types";
+import { ServiceForm } from "./components/ServiceForm";
+import { ServiceList } from "./components/ServiceList";
+import { ServiceBillForm } from "./components/ServiceBillForm";
+import { ServiceBillHistory } from "./components/ServiceBillHistory";
+import type { Product, Client, Bill, Service, ServiceBill } from "./types";
 import { supabase } from "./lib/supabase";
 import { db } from "./lib/db";
 
@@ -19,8 +23,12 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [serviceBills, setServiceBills] = useState<ServiceBill[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
-  type Tab = "products" | "clients" | "billing" | "history" | "payments";
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [editingServiceBill, setEditingServiceBill] = useState<ServiceBill | null>(null);
+  type Tab = "products" | "clients" | "billing" | "history" | "payments" | "services" | "service-billing" | "service-history";
 
   const [activeTab, setActiveTab] = useState<Tab>("products");
 
@@ -29,6 +37,9 @@ export default function App() {
     { tab: "clients", label: "Customers" },
     { tab: "billing", label: "Billing" },
     { tab: "history", label: "Bill History" },
+    { tab: "services", label: "Services" },
+    { tab: "service-billing", label: "Service Billing" },
+    { tab: "service-history", label: "Service History" },
     { tab: "payments", label: "Payments / Loan" },
   ];
   const [clientSearchTerm, setClientSearchTerm] = useState("");
@@ -55,6 +66,8 @@ export default function App() {
       loadProducts();
       loadClients();
       loadBills();
+      loadServices();
+      loadServiceBills();
     }
   }, [loggedIn]);
 
@@ -134,6 +147,24 @@ export default function App() {
     }
   };
 
+  const loadServices = async () => {
+    try {
+      const services = await db.getServices();
+      setServices(services);
+    } catch (error) {
+      console.error("Error loading services:", error);
+    }
+  };
+
+  const loadServiceBills = async () => {
+    try {
+      const serviceBills = await db.getServiceBills();
+      setServiceBills(serviceBills);
+    } catch (error) {
+      console.error("Error loading service bills:", error);
+    }
+  };
+
   const handleProductAdded = async (productData: Omit<Product, "id" | "created_at">) => {
     try {
       const newProduct = await db.addProduct(productData);
@@ -150,6 +181,16 @@ export default function App() {
       if (newClient) setClients((prev) => [...prev, newClient]);
     } catch (error) {
       console.error("Error adding client:", error);
+    }
+  };
+
+  const handleServiceAdded = async (serviceData: Omit<Service, "id" | "created_at">) => {
+    try {
+      const newService = await db.addService(serviceData);
+      if (newService) setServices((prev) => [...prev, newService]);
+      setShowServiceForm(false);
+    } catch (error) {
+      console.error("Error adding service:", error);
     }
   };
 
@@ -328,6 +369,64 @@ export default function App() {
                   />
                 </div>
                 <BillHistory bills={bills} searchTerm={billSearchTerm} />
+              </div>
+            )}
+
+            {activeTab === "services" && (
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    Services
+                  </h2>
+                  <button
+                    onClick={() => setShowServiceForm(true)}
+                    className="inline-flex items-center justify-center px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 text-sm font-medium shadow-sm transition w-full sm:w-auto"
+                  >
+                    Add Service
+                  </button>
+                </div>
+                {showServiceForm ? (
+                  <ServiceForm
+                    onSubmit={handleServiceAdded}
+                    onCancel={() => setShowServiceForm(false)}
+                  />
+                ) : (
+                  <ServiceList services={services} onServiceUpdate={loadServices} />
+                )}
+              </>
+            )}
+
+            {activeTab === "service-billing" && (
+              <div className="space-y-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  {editingServiceBill ? "Edit Service Bill" : "Create Service Bill"}
+                </h2>
+                <ServiceBillForm
+                  services={services}
+                  editingBill={editingServiceBill}
+                  onServiceBillGenerated={() => {
+                    loadServiceBills();
+                  }}
+                  onEditCancel={() => {
+                    setEditingServiceBill(null);
+                  }}
+                />
+              </div>
+            )}
+
+            {activeTab === "service-history" && (
+              <div className="space-y-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  Service Bill History
+                </h2>
+                <ServiceBillHistory 
+                  serviceBills={serviceBills} 
+                  searchTerm={billSearchTerm} 
+                  onEditBill={(bill) => {
+                    setEditingServiceBill(bill);
+                    setActiveTab("service-billing");
+                  }}
+                />
               </div>
             )}
 

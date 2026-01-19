@@ -6,6 +6,13 @@ export interface Product {
   created_at: string;
 }
 
+export interface Service {
+  id: string;
+  name: string;
+  price: number;
+  created_at: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -36,12 +43,42 @@ export interface Bill {
   client?: Client;
   bill_items?: BillItem[];
 }
+
+export interface ServiceItem {
+  id: string;
+  service_bill_id: string;
+  service_id: string;
+  service_name?: string;
+  quantity: number;
+  price_at_time: number;
+  service?: Service;
+}
+
+export interface ServiceBill {
+  id: string;
+  client_id: string;
+  client_name?: string;
+  total: number;
+  discount: number;
+  created_at: string;
+  items?: ServiceItem[];
+  client?: Client;
+  service_items?: ServiceItem[];
+}
 // For creating BillItems (no id, no bill_id at the start)
 export type NewBillItem = Omit<BillItem, "id" | "bill_id">;
 
 // For creating a new Bill (no id, no created_at, items are NewBillItem[])
 export type NewBill = Omit<Bill, "id" | "created_at" | "items"> & {
   items: NewBillItem[];
+}
+
+// For creating ServiceItems (no id, no service_bill_id at the start)
+export type NewServiceItem = Omit<ServiceItem, "id" | "service_bill_id">;
+
+// For creating a new ServiceBill (no id, no created_at, items are NewServiceItem[])
+export type NewServiceBill = Omit<ServiceBill, "id" | "created_at" | "items"> & {
+  items: NewServiceItem[];
 }
 export type Payment = {
   id: string

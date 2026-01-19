@@ -23,7 +23,9 @@ export function Invoice({ bill }: InvoiceProps) {
       <div className="text-center mb-4">
         <h1 className="text-xl font-bold">Ali Electronics</h1>
         <p className="text-sm">Asghar market near Shah City Mall, Puniyal road, Gilgit</p>
-        <p className="text-sm">0310-909340-9 / 0355-450462-2</p>
+        <p className="text-xs"><strong>0310-909340-9 / 0355-450462-2</strong></p>
+        <p className="text-xs"><strong>HabibMetro</strong>  Acc Title: <strong>Ali Electric Store</strong> / <strong>6026220311714136081</strong></p>
+        <p className="text-xs"><strong >EasyPaisa/JazzCash</strong> Acc Title: <strong>Ali Haider</strong> <strong>03109093409</strong></p>
       </div>
 
       {/* Bill Info */}

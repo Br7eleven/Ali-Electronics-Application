@@ -1,6 +1,6 @@
 // db.ts
 import { supabase } from "./supabase";
-import type { Product, Client, Bill, NewBill, Payment } from "../types";
+import type { Product, Client, Bill, NewBill, Payment, Service, ServiceBill, NewServiceBill } from "../types";
 
 export const db = {
   // Products
@@ -33,6 +33,39 @@ export const db = {
 
   async deleteProduct(id: string): Promise<void> {
     const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) throw error;
+  },
+
+  // Services
+  async getServices(): Promise<Service[]> {
+    const { data, error } = await supabase.from("services").select("*");
+    if (error) throw error;
+    return data || [];
+  },
+
+  async addService(service: Omit<Service, "id" | "created_at">): Promise<Service> {
+    const { data, error } = await supabase
+      .from("services")
+      .insert([service])
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateService(id: string, service: Partial<Service>): Promise<Service> {
+    const { data, error } = await supabase
+      .from("services")
+      .update(service)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteService(id: string): Promise<void> {
+    const { error } = await supabase.from("services").delete().eq("id", id);
     if (error) throw error;
   },
 
@@ -207,6 +240,163 @@ async searchClients(query: string): Promise<Client[]> {
       .single();
     if (error) throw error;
     return data;
+  },
+
+  // Service Bills
+  async getServiceBills(): Promise<ServiceBill[]> {
+    const { data, error } = await supabase
+      .from("service_bills")
+      .select(`
+        *,
+        client:clients(
+          id,
+          name,
+          phone,
+          address
+        ),
+        service_items(
+          id,
+          quantity,
+          price_at_time,
+          service:services(
+            id,
+            name,
+            price
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getServiceBill(serviceBillId: string): Promise<ServiceBill | null> {
+    const { data, error } = await supabase
+      .from("service_bills")
+      .select(`
+        *,
+        client:clients(
+          id,
+          name,
+          phone,
+          address
+        ),
+        service_items(
+          id,
+          quantity,
+          price_at_time,
+          service:services(
+            id,
+            name,
+            price
+          )
+        )
+      `)
+      .eq("id", serviceBillId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching service bill:", error);
+      return null;
+    }
+    return data;
+  },
+
+  async addServiceBill(serviceBill: NewServiceBill): Promise<ServiceBill> {
+    const { data: billData, error: billError } = await supabase
+      .from("service_bills")
+      .insert([
+        {
+          client_id: serviceBill.client_id,
+          total: serviceBill.total,
+          discount: serviceBill.discount,
+        },
+      ])
+      .select("id")
+      .single();
+
+    if (billError || !billData) {
+      throw billError || new Error("Failed to create service bill");
+    }
+
+    const serviceItems = serviceBill.items.map((item) => ({
+      service_bill_id: billData.id,
+      service_id: item.service_id,
+      quantity: item.quantity,
+      price_at_time: item.price_at_time,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from("service_items")
+      .insert(serviceItems);
+
+    if (itemsError) throw itemsError;
+
+    const { data: newServiceBill, error: fetchError } = await supabase
+      .from("service_bills")
+      .select(`
+        *,
+        client:clients(
+          id,
+          name,
+          phone,
+          address
+        ),
+        service_items(
+          id,
+          quantity,
+          price_at_time,
+          service:services(
+            id,
+            name,
+            price
+          )
+        )
+      `)
+      .eq("id", billData.id)
+      .single();
+
+    if (fetchError || !newServiceBill) {
+      throw fetchError || new Error("Failed to fetch service bill after creation");
+    }
+
+    return newServiceBill as ServiceBill;
+  },
+
+  async updateServiceBill(id: string, serviceBill: Partial<ServiceBill>): Promise<ServiceBill> {
+    const { data, error } = await supabase
+      .from("service_bills")
+      .update(serviceBill)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // Service Items (for editing service bills)
+  async addServiceItem(item: {
+    service_bill_id: string;
+    service_id: string;
+    quantity: number;
+    price_at_time: number;
+  }): Promise<any> {
+    const { data, error } = await supabase
+      .from("service_items")
+      .insert([item])
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteServiceItem(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("service_items")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
   },
 
   // Users (existing logic kept)
