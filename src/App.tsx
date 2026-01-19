@@ -416,9 +416,18 @@ export default function App() {
 
             {activeTab === "service-history" && (
               <div className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Service Bill History
-                </h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    Service Bill History
+                  </h2>
+                  <input
+                    type="text"
+                    placeholder="Search service bills..."
+                    value={billSearchTerm}
+                    onChange={(e) => setBillSearchTerm(e.target.value)}
+                    className="w-full sm:w-64 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
                 <ServiceBillHistory 
                   serviceBills={serviceBills} 
                   searchTerm={billSearchTerm} 

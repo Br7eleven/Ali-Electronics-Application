@@ -1,3 +1,4 @@
+import React from 'react';
 import type { ServiceBill } from '../types';
 
 interface ServiceInvoiceProps {
@@ -31,7 +32,7 @@ export function ServiceInvoice({ serviceBill }: ServiceInvoiceProps) {
   // --- Table Filling Logic ---
   // We want the table to look like an A4 sheet even with few items
   const items = serviceBill.service_items || [];
-  const MIN_ROWS = 18; // Minimum rows to fill the page visually
+  const MIN_ROWS = 14; // Minimum rows to fill the page visually
   const emptyRowsCount = Math.max(0, MIN_ROWS - items.length);
   const emptyRows = Array(emptyRowsCount).fill(null);
 
@@ -154,6 +155,7 @@ export function ServiceInvoice({ serviceBill }: ServiceInvoiceProps) {
           margin-top: 10px;
           border-top: 2px solid black;
           padding-top: 10px;
+           page-break-inside: avoid;
         }
         .banking-info {
           width: 60%;
@@ -184,25 +186,56 @@ export function ServiceInvoice({ serviceBill }: ServiceInvoiceProps) {
         }
 
         /* Print Settings */
-        @media print {
-          body * { visibility: hidden; }
-          .invoice-wrapper, .invoice-wrapper * { visibility: visible; }
-          .invoice-wrapper { 
-            background: white; 
-            padding: 0; 
-            position: absolute; 
-            left: 0; 
-            top: 0; 
-            width: 100%;
-          }
-          .invoice-container {
-            box-shadow: none;
-            width: 100%;
-            margin: 0;
-            min-height: 100vh; /* Ensure full height on print */
-          }
-          .header, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
+        @page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .invoice-wrapper,
+  .invoice-wrapper * {
+    visibility: visible;
+  }
+
+  .invoice-wrapper {
+    background: white;
+    padding: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    height: 297mm;
+  }
+
+  .invoice-container {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 15mm;
+    box-shadow: none;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+
+  .header,
+  th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+     margin-bottom: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  }
+}
       `}</style>
 
       <div className="invoice-container">
