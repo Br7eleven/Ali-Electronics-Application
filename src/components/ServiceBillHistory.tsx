@@ -16,29 +16,38 @@ export function ServiceBillHistory({ serviceBills, searchTerm, onEditBill }: Ser
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   const filteredServiceBills = useMemo(() => {
-    const isSameDay = (date1: Date, date2: Date) =>
-      date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate();
+  const isSameDay = (date1: Date, date2: Date) =>
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate();
 
-    const filterDate = selectedDate || new Date();
+  return serviceBills
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+    .filter(bill => {
+      // 🔍 Global search across ALL rows
+      const matchesSearch =
+        bill.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.id.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return serviceBills
-      .slice()
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .filter(bill => {
-        const matchesSearch =
-          bill.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          bill.id.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      // 🔥 If user is searching → RETURN SEARCH RESULTS ONLY
+      if (searchTerm.trim() !== "") {
+        return matchesSearch;
+      }
 
-        if (!matchesSearch) {
-          return false;
-        }
-
+      // 📅 If NOT searching → apply date filter
+      if (selectedDate) {
         const billDate = new Date(bill.created_at);
-        return isSameDay(billDate, filterDate);
-      });
-  }, [serviceBills, searchTerm, selectedDate]);
+        return isSameDay(billDate, selectedDate);
+      }
+
+      return true;
+    });
+}, [serviceBills, searchTerm, selectedDate]);
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
