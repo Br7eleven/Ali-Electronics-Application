@@ -16,7 +16,8 @@ import { supabase } from "./lib/supabase";
 import { db } from "./lib/db";
 
 
-const INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours in ms
+const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
+
 
 
 export default function App() {
@@ -47,19 +48,15 @@ export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
 
-  useEffect(() => {
-    const token = localStorage.getItem("sessionToken");
-    if (!token) return;
 
-    db.validateSession(token).then((user) => {
-      if (user) {
-        setLoggedIn(true);
-        setLastActivity(Date.now());
-      } else {
-        handleLogout();
-      }
-    });
-  }, []);
+  useEffect(() => {
+  const token = sessionStorage.getItem("sessionToken");
+  if (token) {
+    setLoggedIn(true);
+    setLastActivity(Date.now());
+  }
+}, []);
+
 
   useEffect(() => {
     if (loggedIn) {
@@ -85,39 +82,38 @@ export default function App() {
   const refreshActivity = () => {
     const now = Date.now();
     setLastActivity(now);
-    localStorage.setItem("lastActivity", now.toString()); // save last activity
+    // localStorage.setItem("lastActivity", now.toString()); // save last activity
+    setLastActivity(now);
   };
 
   const handleLogin = async (username: string, password: string) => {
-    try {
-      const { token, expiry } = await db.loginUser(username, password);
+  try {
+    const { token } = await db.loginUser(username, password);
 
-      localStorage.setItem("sessionToken", token);
-      localStorage.setItem("sessionExpiry", expiry.toString());
-
-      setLoggedIn(true);
-      refreshActivity();
-    } catch (err: any) {
-      // console.error("Login failed:", err);
-
-      if (err.message === "Already logged in elsewhere") {
-        toast.error("Already logged in elsewhere");
-      } else if (err.message === "Invalid credentials") {
-        toast.error("Invalid username or password");
-      } else {
-        toast.error("Login failed");
-      }
+    sessionStorage.setItem("sessionToken", token);
+    setLoggedIn(true);
+    refreshActivity();
+  } catch (err: any) {
+    if (err.message === "Already logged in elsewhere") {
+      toast.error("Already logged in elsewhere");
+    } else if (err.message === "Invalid credentials") {
+      toast.error("Invalid username or password");
+    } else {
+      toast.error("Login failed");
     }
-  };
+  }
+};
+
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("sessionToken");
-    if (token) {
-      await db.logoutUser(token);
-    }
-    setLoggedIn(false);
-    localStorage.clear();
-  };
+  const token = sessionStorage.getItem("sessionToken");
+  if (token) {
+    await db.logoutUser(token);
+  }
+
+  sessionStorage.clear();
+  setLoggedIn(false);
+};
 
   const loadProducts = async () => {
     try {

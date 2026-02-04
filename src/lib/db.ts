@@ -401,37 +401,42 @@ async searchClients(query: string): Promise<Client[]> {
 
   // Users (existing logic kept)
   async loginUser(username: string, password: string) {
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("username", username)
-      .eq("password", password)
-      .single();
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .eq("password", password)
+    .single();
 
-    if (error || !user) {
-      throw new Error("Invalid credentials");
-    }
+  if (error || !user) {
+    throw new Error("Invalid credentials");
+  }
 
-    const now = new Date();
-    if (user.session_token && user.session_expires && new Date(user.session_expires) > now) {
-      throw new Error("Already logged in elsewhere");
-    }
+  // 🔥 FORCE-KILL any existing session (THIS IS THE FIX)
+  await supabase
+    .from("users")
+    .update({
+      session_token: null,
+      session_expires: null,
+    })
+    .eq("id", user.id);
 
-    const token = crypto.randomUUID();
-    const expiry = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  // Create fresh session
+  const token = crypto.randomUUID();
+  const expiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes (or whatever you want)
 
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({
-        session_token: token,
-        session_expires: expiry.toISOString(),
-      })
-      .eq("id", user.id);
+  const { error: updateError } = await supabase
+    .from("users")
+    .update({
+      session_token: token,
+      session_expires: expiry.toISOString(),
+    })
+    .eq("id", user.id);
 
-    if (updateError) throw updateError;
+  if (updateError) throw updateError;
 
-    return { token, expiry };
-  },
+  return { token, expiry };
+},
 
   async validateSession(token: string) {
     const { data: user, error } = await supabase
@@ -451,16 +456,16 @@ async searchClients(query: string): Promise<Client[]> {
   },
 
   async logoutUser(token: string) {
-    const { error } = await supabase
-      .from("users")
-      .update({
-        session_token: null,
-        session_expires: null,
-      })
-      .eq("session_token", token);
+  const { error } = await supabase
+    .from("users")
+    .update({
+      session_token: null,
+      session_expires: null,
+    })
+    .eq("session_token", token);
 
-    if (error) throw error;
-  },
+  if (error) throw error;
+},
 
   // ================= Payments =================
 
