@@ -317,7 +317,7 @@ export function ServiceInvoice({ serviceBill }: ServiceInvoiceProps) {
             <p><strong>Bank Details:</strong><br />
             Habib Metro<br />
             Acc Title: Ali Electric Store<br />
-            6026220311714138081</p>
+            6026220311714136081</p>
             <p style={{marginTop: '5px'}}>EasyPaisa: 03109093409 (Ali Haider)</p>
             
             <div style={{ marginTop: '50px', textAlign: 'center', width: '200px', borderTop: '1px solid black', paddingTop: '5px' }}>
